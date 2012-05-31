@@ -98,32 +98,29 @@
        注意：这里相比旧版本替换了<indexDefaults>和<mainIndex>
        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <indexConfig>
-    <!-- maxFieldLength specifies max number of *tokens* indexed per field. Default: 10000 -->
+    <!-- maxFieldLength 指明索引中每个字段 *tokens* 的最大数量。默认值：10000 -->
     <!-- <maxFieldLength>10000</maxFieldLength>  -->
-    <!-- Maximum time to wait for a write lock (ms) for an IndexWriter. Default: 1000 -->
+
+    <!-- 一个索引写入器为一个锁定写入可以等待的最大时间(ms)。默认值：1000 -->
     <!-- <writeLockTimeout>1000</writeLockTimeout>  -->
 
-    <!-- Expert: Enabling compound file will use less files for the index, 
-         using fewer file descriptors on the expense of performance decrease. 
-         Default in Lucene is "true". Default in Solr is "false" (since 3.6) -->
+    <!-- 进阶配置：使用复合文件可以使用更少的索引文件，更少的文件可以降低系统开销。
+         在Lucene里默认是"true"。在Solr里面默认是"false"(从3.6开始)-->
     <!-- <useCompoundFile>false</useCompoundFile> -->
 
-    <!-- ramBufferSizeMB sets the amount of RAM that may be used by Lucene
-         indexing for buffering added documents and deletions before they are
-         flushed to the Directory.
-         maxBufferedDocs sets a limit on the number of documents buffered
-         before flushing.
-         If both ramBufferSizeMB and maxBufferedDocs is set, then
-         Lucene will flush based on whichever limit is hit first.  -->
+    <!-- ramBufferSizeMB设置Lucene在添加和删除文档之后、刷新到目录之前缓冲区所用的
+         内存大小。
+         maxBufferedDocs限制在刷新之前文档缓冲区缓冲的文档数量。
+         如果以上两个设置使用了，那么Lucene会基于先命中的那个配置来刷新。-->
     <!-- <ramBufferSizeMB>32</ramBufferSizeMB> -->
     <!-- <maxBufferedDocs>1000</maxBufferedDocs> -->
 
-    <!-- Expert: Merge Policy 
-         The Merge Policy in Lucene controls how merging of segments is done.
-         The default since Solr/Lucene 3.3 is TieredMergePolicy.
-         The default since Lucene 2.3 was the LogByteSizeMergePolicy,
-         Even older versions of Lucene used LogDocMergePolicy.
-      -->
+    <!-- 进阶配置：合并策略
+         Lucene合并策略控制多个片段的合并。
+         Solr/Lucene 3.3时的默认值是TieredMergePolicy。
+         Lucene 2.3时的默认值是LogByteSizeMergePolicy。
+         更老的Lucene版本LogDocMergePolicy。
+    -->
     <!--
         <mergePolicy class="org.apache.lucene.index.TieredMergePolicy">
           <int name="maxMergeAtOnce">10</int>
@@ -131,98 +128,89 @@
         </mergePolicy>
       -->
        
-    <!-- Merge Factor
-         The merge factor controls how many segments will get merged at a time.
-         For TieredMergePolicy, mergeFactor is a convenience parameter which
-         will set both MaxMergeAtOnce and SegmentsPerTier at once.
-         For LogByteSizeMergePolicy, mergeFactor decides how many new segments
-         will be allowed before they are merged into one.
-         Default is 10 for both merge policies.
+    <!-- 合并因子
+         合并因子控制一次合并操作合并多少个片段。
+         对于TieredMergePolicy,合并因子很简单就是MaxMergeAtOnce与SegmentsPerTier之和。
+         对于LogByteSizeMergePolicy,合并因子决定合并之前允许有多少个片段。
+         两种策略的默认值都是10。
       -->
     <!-- 
-    <mergeFactor>10</mergeFactor>
+        <mergeFactor>10</mergeFactor>
       -->
 
-    <!-- Expert: Merge Scheduler
-         The Merge Scheduler in Lucene controls how merges are
-         performed.  The ConcurrentMergeScheduler (Lucene 2.3 default)
-         can perform merges in the background using separate threads.
-         The SerialMergeScheduler (Lucene 2.2 default) does not.
+    <!-- 进阶配置：合并安排 
+         Lucene里的合并安排控制合并操作的进行。ConcurrentMergeScheduler(Lucene 2.3时的默认值)
+         可以在后台用子进程执行合并操作。而SerialMergeScheduler(Lucene 2.2默认值)则
+         做不到。
      -->
     <!-- 
        <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
        -->
 
-    <!-- LockFactory 
+    <!-- LockFactory
+         
+         这个选项指明Lucene里面LockFactory的实现。
 
-         This option specifies which Lucene LockFactory implementation
-         to use.
-      
-         single = SingleInstanceLockFactory - suggested for a
-                  read-only index or when there is no possibility of
-                  another process trying to modify the index.
-         native = NativeFSLockFactory - uses OS native file locking.
-                  Do not use when multiple solr webapps in the same
-                  JVM are attempting to share a single index.
-         simple = SimpleFSLockFactory  - uses a plain file for locking
+         single = SingleInstanceLockFactory - 适用于只读索引或不会被其他进程修改的索引。
 
-         Defaults: 'native' is default for Solr3.6 and later, otherwise
-                   'simple' is the default
+         native = NativeFSLockFactory - 使用系统本地文件锁。当多个Solr应用在同一个
+                  JVM试图共享一个索引的情况下不要用这个锁。
+         simple = SimpleFSLockFactory - 使用文本文件锁定。
 
-         More details on the nuances of each LockFactory...
+         默认值：Solr3.6以及更新的版本使用'native',其他版本使用'simple'。
+
+         更多细节参阅：
          http://wiki.apache.org/lucene-java/AvailableLockFactories
     -->
     <!-- <lockType>native</lockType> -->
 
-    <!-- Unlock On Startup
+    <!-- 启动解锁
 
-         If true, unlock any held write or commit locks on startup.
-         This defeats the locking mechanism that allows multiple
-         processes to safely access a lucene index, and should be used
-         with care. Default is "false".
+         如果设置为true,启动时会解锁任何写/提交锁。这会是多进程安全访问lucene索引的
+         机制失效，所以慎用。默认值："false"。
 
-         This is not needed if lock type is 'none' or 'single'
-     -->
+         如果锁类型为"none"或者"single"这个就没必要了。
+    -->
     <!--
     <unlockOnStartup>false</unlockOnStartup>
       -->
     
-    <!-- Expert: Controls how often Lucene loads terms into memory
-         Default is 128 and is likely good for most everyone.
+    <!-- 进阶配置：控制Lucene将术语导入内存的频率。
+         默认是128，对大多数人来说都是比较合适的。
       -->
     <!-- <termIndexInterval>128</termIndexInterval> -->
 
-    <!-- If true, IndexReaders will be reopened (often more efficient)
-         instead of closed and then opened. Default: true
+    <!-- reopenReaders
+
+         如果为"true"，索引读取器会重开（通常会更高效）而不是关闭后再开。
+         默认值："true"。
       -->
     <!-- 
     <reopenReaders>true</reopenReaders>
       -->
 
-    <!-- Commit Deletion Policy
-
-         Custom deletion policies can be specified here. The class must
-         implement org.apache.lucene.index.IndexDeletionPolicy.
+    <!-- 提交删除策略
+         
+         这里可以指定自定义删除策略。自定义类必须实现 org.apache.lucene.index.IndexDeletionPolicy。
 
          http://lucene.apache.org/java/3_5_0/api/core/org/apache/lucene/index/IndexDeletionPolicy.html
 
-         The default Solr IndexDeletionPolicy implementation supports
-         deleting index commit points on number of commits, age of
-         commit point and optimized status.
-         
-         The latest commit point should always be preserved regardless
-         of the criteria.
-    -->
+         默认Solr IndexDeletionPolicy实现支持根据提交号码、提交点age和最优化状态来删除索引。
+
+         最新提交点应该无视规则一直保持。
+      -->
     <!-- 
     <deletionPolicy class="solr.SolrDeletionPolicy">
     -->
-      <!-- The number of commit points to be kept -->
+      <!-- 要保持的提交点的号码 -->
       <!-- <str name="maxCommitsToKeep">1</str> -->
-      <!-- The number of optimized commit points to be kept -->
+
+      <!-- 要保持的优化提交点的号码 -->
       <!-- <str name="maxOptimizedCommitsToKeep">0</str> -->
-      <!--
-          Delete all commit points once they have reached the given age.
-          Supports DateMathParser syntax e.g.
+
+      <!-- 
+          一旦提交点提交到给定age，就删除所有提交点。
+          支持DateMathParser语法，例如：
         -->
       <!--
          <str name="maxCommitAge">30MINUTES</str>
@@ -232,66 +220,54 @@
     </deletionPolicy>
     -->
 
-    <!-- Lucene Infostream
-       
-         To aid in advanced debugging, Lucene provides an "InfoStream"
-         of detailed information when indexing.
+     <!-- Lucene 信息流
 
-         Setting The value to true will instruct the underlying Lucene
-         IndexWriter to write its debugging info the specified file
+         为了支持高级调试，Lucene提供了一个"Infostream"，包含了索引时的细节信息。
+
+         设置值为"true"可以指示Lucene底层IndexWriter将调试信息写到指定文件内。
       -->
      <!-- <infoStream file="INFOSTREAM.txt">false</infoStream> --> 
   </indexConfig>
 
-
   <!-- JMX
        
-       This example enables JMX if and only if an existing MBeanServer
-       is found, use this if you want to configure JMX through JVM
-       parameters. Remove this to disable exposing Solr configuration
-       and statistics to JMX.
+       这个例子启用了JMX。如果有MBeanServer，则可以通过JVM参数来配置JMX。
+       删除这个可以禁止Solr的配置和统计信息到JMX里。
 
-       For more details see http://wiki.apache.org/solr/SolrJmx
+       更多细节请看 http://wiki.apache.org/solr/SolrJmx
     -->
   <jmx />
-  <!-- If you want to connect to a particular server, specify the
-       agentId 
-    -->
+  <!-- 如果你想连接特殊服务器，在这里指明agentId。 -->
   <!-- <jmx agentId="myAgent" /> -->
-  <!-- If you want to start a new MBeanServer, specify the serviceUrl -->
-  <!-- <jmx serviceUrl="service:jmx:rmi:///jndi/rmi://localhost:9999/solr"/>
-    -->
 
-  <!-- The default high-performance update handler -->
+  <!-- 如果你想启动一个新的MBeanServer,在这里指明服务URL。 -->
+  <!-- <jmx serviceUrl="service:jmx:rmi:///jndi/rmi://localhost:9999/solr"/> -->
+
+  <!-- 默认高性能更新处理器 -->
   <updateHandler class="solr.DirectUpdateHandler2">
 
-    <!-- AutoCommit
+     <!-- 自动提交
 
-         Perform a hard commit automatically under certain conditions.
-         Instead of enabling autoCommit, consider using "commitWithin"
-         when adding documents. 
+          在特定条件下执行一个硬提交。如果不用自动提交，可以使用"commitWithin"在
+          添加文档时提交。
 
-         http://wiki.apache.org/solr/UpdateXmlMessages
+          http://wiki.apache.org/solr/UpdateXmlMessages
 
-         maxDocs - Maximum number of documents to add since the last
-                   commit before automatically triggering a new commit.
+          maxDocs - 一次自动提交可以提交的文档数量。
 
-         maxTime - Maximum amount of time in ms that is allowed to pass
-                   since a document was added before automaticly
-                   triggering a new commit. 
-         openSearcher - if false, the commit causes recent index changes
-         to be flushed to stable storage, but does not cause a new
-         searcher to be opened to make those changes visible.
-      -->
+          maxTime - 添加操作多久之后进行自动提交，单位：ms
+
+          openSearcher - 如果为false，提交会促使索引变化并刷新到稳定存储介质中，但是
+                         不会打开新的搜索器使这些变化可见。
+     
+       -->
      <autoCommit> 
        <maxTime>15000</maxTime> 
        <openSearcher>false</openSearcher> 
      </autoCommit>
 
-    <!-- softAutoCommit is like autoCommit except it causes a
-         'soft' commit which only ensures that changes are visible
-         but does not ensure that data is synced to disk.  This is
-         faster and more near-realtime friendly than a hard commit.
+    <!-- softAutoCommit与autoCommit类似，但是它会进行"soft"提交。"soft"提交只保证变化可见，不
+         保证数据同步到硬盘上。这个会更快更实时，比硬提交更友好些。
       -->
      <!--
        <autoSoftCommit> 
@@ -299,26 +275,25 @@
        </autoSoftCommit>
       -->
 
-    <!-- Update Related Event Listeners
-         
-         Various IndexWriter related events can trigger Listeners to
-         take actions.
+    <!-- 根据事件来更新
 
-         postCommit - fired after every commit or optimize command
-         postOptimize - fired after every optimize command
+         很多事件关联的IndexWriter能够触发监听器来执行动作。
+
+         postCommit - 每次提交或优化后触发。
+         postOptimize - 每次优化命令后触发。
       -->
-    <!-- The RunExecutableListener executes an external command from a
-         hook such as postCommit or postOptimize.
-         
-         exe - the name of the executable to run
-         dir - dir to use as the current working directory. (default=".")
-         wait - the calling thread waits until the executable returns. 
-                (default="true")
-         args - the arguments to pass to the program.  (default is none)
-         env - environment variables to set.  (default is none)
+
+    <!-- RunExecutableListener在控制台内执行一条来自postCommit或postOptimize的命令。
+
+         exe - 要执行命令的名字
+         dir - 当前工作目录。（默认值="."）
+         wait - 请求进程是否等待执行结果。（默认值="true"）
+         args - 传给程序的参数。（默认为none）
+         env - 要设置的环境变量。（默认为none）
       -->
-    <!-- This example shows how RunExecutableListener could be used
-         with the script based replication...
+
+    <!-- 这个例子展示了RunExecutableListener可以通过基于replication的脚本来执行：
+
          http://wiki.apache.org/solr/CollectionDistribution
       -->
     <!--
@@ -331,9 +306,10 @@
        </listener>
       -->
 
-    <!-- Enables a transaction log, currently used for real-time get.
-         "dir" - the target directory for transaction logs, defaults to the
-            solr data directory.  --> 
+    <!-- 启用事务日志，当前是实时方式。
+
+         "dir" - 事务日志的目标路径，默认是solr数据目录。
+      -->
     <updateLog>
       <str name="dir">${solr.data.dir:}</str>
     </updateLog>
@@ -343,33 +319,25 @@
   
   <!-- IndexReaderFactory
 
-       Use the following format to specify a custom IndexReaderFactory,
-       which allows for alternate IndexReader implementations.
+       通过下面的格式来指明一个自定义IndexReaderFactory,可以使用可选IndexReader实现。
 
-       ** Experimental Feature **
+       **实验特性**
 
-       Please note - Using a custom IndexReaderFactory may prevent
-       certain other features from working. The API to
-       IndexReaderFactory may change without warning or may even be
-       removed from future releases if the problems cannot be
-       resolved.
+       请注意 - 使用自定义IndexReaderFactory有可能会妨碍其他特性的正常工作。IndexReaderFactory
+       的API会无提醒的发生变化，甚至在问题无法解决的情况下在未来的版本中移除。
 
+       ** 使用自定义IndexReaderFactory的特性可能没生效 **
 
-       ** Features that may not work with custom IndexReaderFactory **
-
-       The ReplicationHandler assumes a disk-resident index. Using a
-       custom IndexReader implementation may cause incompatibility
-       with ReplicationHandler and may cause replication to not work
-       correctly. See SOLR-1366 for details.
-
+       ReplicationHandler假定有一个存放到硬盘上的索引。使用自定义IndexReader有可能导致
+       ReplicationHandler不兼容从而导致replication特性无法正常工作。
+       细节请看：SOLR-1366
     -->
   <!--
   <indexReaderFactory name="IndexReaderFactory" class="package.class">
     <str name="someArg">Some Value</str>
   </indexReaderFactory >
   -->
-  <!-- By explicitly declaring the Factory, the termIndexDivisor can
-       be specified.
+  <!-- 通过明确声明工厂，termIndexDivisor可以被指明。
     -->
   <!--
      <indexReaderFactory name="IndexReaderFactory" 
