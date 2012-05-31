@@ -36,17 +36,17 @@
               <lib dir="./lib" />
     -->
 
-  <!-- A 'dir' option by itself adds any files found in the directory 
-       to the classpath, this is useful for including all jars in a
-       directory.
+  <!--
+    每一个自己加的'dir'选项都会添加到类路径里，这在包含某个目录所有jars包是很有用。
+    如下：
     -->
+
   <!--
      <lib dir="../add-everything-found-in-this-dir-to-the-classpath" />
   -->
 
-  <!-- When a 'regex' is specified in addition to a 'dir', only the
-       files in that directory which completely match the regex
-       (anchored on both ends) will be included.
+  <!-- 当你在一个'dir'配置项里指定了'regex'参数，则只有该目录下完全匹配此正则的文件
+       才会被包含。
     -->
   <lib dir="../../dist/" regex="apache-solr-cell-\d.*\.jar" />
   <lib dir="../../contrib/extraction/lib" regex=".*\.jar" />
@@ -60,49 +60,42 @@
   <lib dir="../../dist/" regex="apache-solr-velocity-\d.*\.jar" />
   <lib dir="../../contrib/velocity/lib" regex=".*\.jar" />
 
-  <!-- If a 'dir' option (with or without a regex) is used and nothing
-       is found that matches, it will be ignored
+  <!--
+    如果一个'dir'配置项（不论有没有'regex'）被包含了而且没有找到匹配文件，则会被忽略。
     -->
   <lib dir="/total/crap/dir/ignored" /> 
 
-  <!-- an exact 'path' can be used instead of a 'dir' to specify a 
-       specific file.  This will cause a serious error to be logged if 
-       it can't be loaded.
+  <!--
+    准确'path'可以代替'dir'来指明一个文件。如果这个文件无法载入，会记录一条严重错误。
     -->
   <!--
      <lib path="../a-jar-that-does-not-exist.jar" /> 
   -->
   
-  <!-- Data Directory
+  <!-- 数据目录
 
-       Used to specify an alternate directory to hold all index data
-       other than the default ./data under the Solr home.  If
-       replication is in use, this should match the replication
-       configuration.
+       用来声明除Solr根目录下'./data'以外的目录来保存索引数据。如果使用俄同步，这会匹
+       配replication配置。
     -->
   <dataDir>${solr.data.dir:}</dataDir>
 
 
-  <!-- The DirectoryFactory to use for indexes.
-       
-       solr.StandardDirectoryFactory, the default, is filesystem
-       based and tries to pick the best implementation for the current
-       JVM and platform.  One can force a particular implementation
-       via solr.MMapDirectoryFactory, solr.NIOFSDirectoryFactory, or
-       solr.SimpleFSDirectoryFactory.
+  <!-- 用在索引上的DirectoryFactory。
 
-       solr.RAMDirectoryFactory is memory based, not
-       persistent, and doesn't work with replication.
+       solr.StandardDirectoryFactory，作为默认选择，是基于文件系统的，并且是目前JVM和平台
+       的最好的实现。你可以强制使用以下实现：solr.MMapDirectoryFactory,solr.NIOFSDirectoryFactory,
+       solr.SimpleFSDirectoryFactory。
+
+       solr.RAMDirectoryFactory是基于内存的，不持久的，并且的不能使用replication。
     -->
   <directoryFactory name="DirectoryFactory" 
                     class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
 
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       Index Config - These settings control low-level behavior of indexing
-       Most example settings here show the default value, but are commented
-       out, to more easily see where customizations have been made.
+       索引配置 - 这些设置控制索引中的低位行为。这里大多数配置例子都使用默认值，但是都
+       被注释掉了，这是为了更简单的看到哪里可以自定义设置。
        
-       Note: This replaces <indexDefaults> and <mainIndex> from older versions
+       注意：这里相比旧版本替换了<indexDefaults>和<mainIndex>
        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <indexConfig>
     <!-- maxFieldLength specifies max number of *tokens* indexed per field. Default: 10000 -->
