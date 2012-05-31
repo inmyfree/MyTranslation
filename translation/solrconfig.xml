@@ -347,87 +347,70 @@
     -->
 
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       Query section - these settings control query time things like caches
+       查询部分 - 这里的配置控制着查询期间的事情，比如：缓存。
        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <query>
-    <!-- Max Boolean Clauses
+    <!-- 最大布尔型子句
 
-         Maximum number of clauses in each BooleanQuery,  an exception
-         is thrown if exceeded.
 
-         ** WARNING **
-         
-         This option actually modifies a global Lucene property that
-         will affect all SolrCores.  If multiple solrconfig.xml files
-         disagree on this property, the value at any given moment will
-         be based on the last SolrCore to be initialized.
+         每条布尔型查询子句的最大长度，如果超出会抛出异常。
+
+         ** 警告 **
+
+         这个选项实际修改了一个能影响Solr全局的Lucene属性。如果多个solrconfig.xml在这个
+         属性上不一致，则最终生效的是最后一个值。
          
       -->
     <maxBooleanClauses>1024</maxBooleanClauses>
 
+    <!-- Solr内部查询缓存
 
-    <!-- Solr Internal Query Caches
+         Solr内部有两种缓存实现：
+         LRUCache,基于同步的LinkedHashMap。
+         FastLRUCache,基于ConcurrentHashMap。
 
-         There are two implementations of cache available for Solr,
-         LRUCache, based on a synchronized LinkedHashMap, and
-         FastLRUCache, based on a ConcurrentHashMap.  
-
-         FastLRUCache has faster gets and slower puts in single
-         threaded operation and thus is generally faster than LRUCache
-         when the hit ratio of the cache is high (> 75%), and may be
-         faster under other scenarios on multi-cpu systems.
+         FastLRUCache可以更快的读和更慢的写，因为是通过单线程操作。这样的话一般来说当缓存命中
+         率较高的时候(> 75%)是比LRUCache要快的，而且在多核系统的情况下也要更快。
     -->
 
-    <!-- Filter Cache
+    <!-- 过滤器缓存
+         
+        SolrIndexSearcher过滤器（DocSets）使用的缓存，匹配一个查询的 *all* 文档无序序列。
+        当打开一个新的搜索器时，会构建一个缓存或者使用一个旧的搜索器的缓存来"autowarmed"。
+        autowarmCount是构建术语的数量。对于LRUCache来说，autowarmed的属于是最近访问的术语。
 
-         Cache used by SolrIndexSearcher for filters (DocSets),
-         unordered sets of *all* documents that match a query.  When a
-         new searcher is opened, its caches may be prepopulated or
-         "autowarmed" using data from caches in the old searcher.
-         autowarmCount is the number of items to prepopulate.  For
-         LRUCache, the autowarmed items will be the most recently
-         accessed items.
-
-         Parameters:
-           class - the SolrCache implementation LRUCache or
-               (LRUCache or FastLRUCache)
-           size - the maximum number of entries in the cache
-           initialSize - the initial capacity (number of entries) of
-               the cache.  (see java.util.HashMap)
-           autowarmCount - the number of entries to prepopulate from
-               and old cache.  
+        参数：
+            class - SolrCache的实现，LRUCache或者FastLRUCache。
+            size - 缓存最大数量。
+            initialSize - 缓存的初始化容量（参考 java.util.HashMap）
+            autowarmCount - 要构建的输入数量和旧缓存。
       -->
     <filterCache class="solr.FastLRUCache"
                  size="512"
                  initialSize="512"
                  autowarmCount="0"/>
 
-    <!-- Query Result Cache
+    <!-- 查询结果缓存
          
-         Caches results of searches - ordered lists of document ids
-         (DocList) based on a query, a sort, and the range of documents requested.  
+         缓存搜索的结果 - 一个有序列表，基于一个查询、一种排序的请求的来的文档。
       -->
     <queryResultCache class="solr.LRUCache"
                      size="512"
                      initialSize="512"
                      autowarmCount="0"/>
    
-    <!-- Document Cache
+    <!-- 文档缓存
 
-         Caches Lucene Document objects (the stored fields for each
-         document).  Since Lucene internal document ids are transient,
-         this cache will not be autowarmed.  
+         缓存Lucene文档对象(每个文档保存的字段)。因为Lucene内部文档比较短，这个缓存将不会自动开启。
       -->
     <documentCache class="solr.LRUCache"
                    size="512"
                    initialSize="512"
                    autowarmCount="0"/>
-    
-    <!-- Field Value Cache
-         
-         Cache used to hold field values that are quickly accessible
-         by document id.  The fieldValueCache is created by default
-         even if not configured here.
+
+    <!-- 字段值缓存
+        
+         动过文档ID来缓存快速房屋的字段。fieldValueCache是默认有效的。
       -->
     <!--
        <fieldValueCache class="solr.FastLRUCache"
@@ -436,14 +419,11 @@
                         showItems="32" />
       -->
 
-    <!-- Custom Cache
-
-         Example of a generic cache.  These caches may be accessed by
-         name through SolrIndexSearcher.getCache(),cacheLookup(), and
-         cacheInsert().  The purpose is to enable easy caching of
-         user/application level data.  The regenerator argument should
-         be specified as an implementation of solr.CacheRegenerator 
-         if autowarming is desired.  
+    <!-- 自定义缓存
+         
+         普通缓存的例子。这些缓存可以通过以下方式访问：SolrIndexSearcher.getCache(),
+         cacheLookup(),cacheInsert().目的是使用户/应用层的数据可以简单的进行缓存。
+         如果要自动生成的话必须为solr.CacheRegenerator指明生成缓存的参数。
       -->
     <!--
        <cache name="myUserCache"
@@ -455,68 +435,50 @@
               />
       -->
 
-
-    <!-- Lazy Field Loading
-
-         If true, stored fields that are not requested will be loaded
-         lazily.  This can result in a significant speed improvement
-         if the usual case is to not load all stored fields,
-         especially if the skipped fields are large compressed text
-         fields.
-    -->
+    <!-- 字段载入延迟
+         
+         如果设置为"true",没被请求的字段就会被延迟载入。这对速度优化有这着重要意义，
+         因为通常一次查询不需要全部字段，特别是被忽略的字段是个压缩了的大文本字段。
+      -->
     <enableLazyFieldLoading>true</enableLazyFieldLoading>
 
-   <!-- Use Filter For Sorted Query
+   <!-- 在排序查询中使用过滤器
+        
+        一个可选的优化方式是通过过滤器来满足搜索条件。如果请求的排序不包括分数，那么
+        当过滤器满足一个查询的时候会检查过滤器缓存。如果命中缓存，则过滤器的文档列表
+        会作为数据，然后对其进行排序。
 
-        A possible optimization that attempts to use a filter to
-        satisfy a search.  If the requested sort does not include
-        score, then the filterCache will be checked for a filter
-        matching the query. If found, the filter will be used as the
-        source of document ids, and then the sort will be applied to
-        that.
-
-        For most situations, this will not be useful unless you
-        frequently get the same search repeatedly with different sort
-        options, and none of them ever use "score"
+        大多数情况下，这都没啥用。除非你频繁重复同一个查询却使用不同的排序方式，而且
+        这些货都没用到分数。
      -->
    <!--
       <useFilterForSortedQuery>true</useFilterForSortedQuery>
      -->
 
-   <!-- Result Window Size
+   <!-- 结果窗口尺寸
 
-        An optimization for use with the queryResultCache.  When a search
-        is requested, a superset of the requested number of document ids
-        are collected.  For example, if a search for a particular query
-        requests matching documents 10 through 19, and queryWindowSize is 50,
-        then documents 0 through 49 will be collected and cached.  Any further
-        requests in that range can be satisfied via the cache.  
+        一种用查询结果缓存来进行的优化方式。当一个搜索请求发出，会获得一个符合条件的
+        结果集序列。例如，一个查询语句亲求符合条件的结果的第10至19条，而queryWindowSize设置
+        为50，那么结果集的0-49条文档会被收集到缓存中。未来其他在此区间的请求都可以用这个缓存
+        来搞定。
      -->
    <queryResultWindowSize>20</queryResultWindowSize>
 
-   <!-- Maximum number of documents to cache for any entry in the
-        queryResultCache. 
-     -->
+   <!-- 查询结果缓存为每个输入可以进行缓存的文档数量。-->
    <queryResultMaxDocsCached>200</queryResultMaxDocsCached>
 
-   <!-- Query Related Event Listeners
+   <!-- 事件触发查询
 
-        Various IndexSearcher related events can trigger Listeners to
-        take actions.
+        各种关联事件的IndexSearcher会在触发监听器时开始运行。
 
-        newSearcher - fired whenever a new searcher is being prepared
-        and there is a current searcher handling requests (aka
-        registered).  It can be used to prime certain caches to
-        prevent long request times for certain requests.
+        newSearcher - 当一个新的搜索准备开始而当前有其他搜索请求在进行中的时候触发。它可以用来
+        命中最接近缓存来避免一次请求时间过长。
 
-        firstSearcher - fired whenever a new searcher is being
-        prepared but there is no current registered searcher to handle
-        requests or to gain autowarming data from.
-
-        
+        firstSearcher - 当一个搜索准备开始而当前没有其他搜索请求在处理或获得数据的时候触发。
      -->
-    <!-- QuerySenderListener takes an array of NamedList and executes a
-         local query request for each NamedList in sequence. 
+
+    <!-- QuerySenderListener 生成一个数组来保存NamedList和要在本地为对于NamedList执行的查询请求队列。
+    
       -->
     <listener event="newSearcher" class="solr.QuerySenderListener">
       <arr name="queries">
@@ -534,112 +496,82 @@
       </arr>
     </listener>
 
-    <!-- Use Cold Searcher
+    <!-- 使用冷搜索器
 
-         If a search request comes in and there is no current
-         registered searcher, then immediately register the still
-         warming searcher and use it.  If "false" then all requests
-         will block until the first searcher is done warming.
+         如果一个搜索请求过来的时候当前没有注册其他搜索器，那么注册器会马上为它准备并开始使用它。
+         如果设置成"false"，所有请求会阻塞到第一个搜索器准备(warming)完成。
       -->
     <useColdSearcher>false</useColdSearcher>
 
-    <!-- Max Warming Searchers
+    <!-- 准备(warming)搜索器的数量上限
          
-         Maximum number of searchers that may be warming in the
-         background concurrently.  An error is returned if this limit
-         is exceeded.
+         一次性warming搜索器的最大数量。如果超过这个值会返回一个错误。
 
-         Recommend values of 1-2 for read-only slaves, higher for
-         masters w/o cache warming.
+         建议只读的slaves设置为1-2，master可以更高。
       -->
     <maxWarmingSearchers>2</maxWarmingSearchers>
 
   </query>
 
 
-  <!-- Request Dispatcher
+  <!-- 请求调度器
 
-       This section contains instructions for how the SolrDispatchFilter
-       should behave when processing requests for this SolrCore.
+       这部分包含了当为SolrCore处理请求时SolrDispatchFilter进行的操作指令。
 
-       handleSelect affects the behavior of requests such as /select?qt=XXX
+       handleSelect通过这样的方式来影响请求行为：/select?qt=xxx
 
-       handleSelect="true" will cause the SolrDispatchFilter to process
-       the request and dispatch the query to a handler specified by the 
-       "qt" param
+       handleSelect="true"会导致SolrDispatchFilter去处理请求并根据参数"qt"的值来处理查询
 
-       handleSelect="false" will cause the SolrDispatchFilter to
-       ignore "/select" requests, resulting in a 404 unless a handler
-       is explicitly registered with the name "/select"
+       handleSelect="false"会导致SolrDispatchFilter忽略"/select"请求，如果请求里有"/select"会404。
     -->
   <requestDispatcher handleSelect="true" >
-    <!-- Request Parsing
+    <!-- 请求解析
 
-         These settings indicate how Solr Requests may be parsed, and
-         what restrictions may be placed on the ContentStreams from
-         those requests
+         这些设置显示Solr如何解析请求，以及请求内容有什么限制。
 
-         enableRemoteStreaming - enables use of the stream.file
-         and stream.url parameters for specifying remote streams.
+         enableRemoteStreaming - 允许使用stream.file和stream.url参数来指定远程数据流。
 
-         multipartUploadLimitInKB - specifies the max size of
-         Multipart File Uploads that Solr will allow in a Request.
-         
-         *** WARNING ***
-         The settings below authorize Solr to fetch remote files, You
-         should make sure your system has some authentication before
-         using enableRemoteStreaming="true"
+         multipartUploadLimitInKB - 指明Solr允许的多块文件上传的最大容量。
 
+         *** 警告 ***
+         以下设置运行Solr获得远程文件，你在enableRemoteStreaming="true"之前要确保系统提供了相应的用户权限。
       --> 
     <requestParsers enableRemoteStreaming="true" 
                     multipartUploadLimitInKB="2048000" />
 
-    <!-- HTTP Caching
+    <!-- HTTP缓存
 
-         Set HTTP caching related parameters (for proxy caches and clients).
+         设置参数关联的HTTP缓存（针对代理和客户端）。
 
-         The options below instruct Solr not to output any HTTP Caching
-         related headers
+         以下选项指示Solr不要输出HTTP缓存相关的头信息。
       -->
     <httpCaching never304="true" />
-    <!-- If you include a <cacheControl> directive, it will be used to
-         generate a Cache-Control header (as well as an Expires header
-         if the value contains "max-age=")
-         
-         By default, no Cache-Control header is generated.
-         
-         You can use the <cacheControl> option even if you have set
-         never304="true"
+    <!-- 如果你包含了<cacheControl>目录，就会用来生成一个Cache-Control头（如果头信息
+         包含了"max-age="，页会田间Expires标签。）
+
+         默认情况下，是没有Cache-Control头信息的。
+
+         即使你设置了never304="true"，你仍然可以用<cacheControl>选项。
       -->
     <!--
        <httpCaching never304="true" >
          <cacheControl>max-age=30, public</cacheControl> 
        </httpCaching>
       -->
-    <!-- To enable Solr to respond with automatically generated HTTP
-         Caching headers, and to response to Cache Validation requests
-         correctly, set the value of never304="false"
+    <!-- 为了使Solr能够响应带自动生成缓存头信息的请求，并能够准确响应到缓存验证器，应该设置
+         never304="false"
          
-         This will cause Solr to generate Last-Modified and ETag
-         headers based on the properties of the Index.
+         这会使Solr生成Last-Modified和Etag头信息到索引里面的属性。
 
-         The following options can also be specified to affect the
-         values of these headers...
+         下面的选项也可以写到头信息里：
 
-         lastModFrom - the default value is "openTime" which means the
-         Last-Modified value (and validation against If-Modified-Since
-         requests) will all be relative to when the current Searcher
-         was opened.  You can change it to lastModFrom="dirLastMod" if
-         you want the value to exactly correspond to when the physical
-         index was last modified.
+         lastModFrom - 默认值是"openTime"，意思是Last-Modified的值（及对应If-Modified-Since的
+         请求验证）将全部在搜索请求打开时生效。如果你想要物理索引上次变化的准确值，你可以把它
+         改成lastModFrom="dirLastMod"。
 
-         etagSeed="..." is an option you can change to force the ETag
-         header (and validation against If-None-Match requests) to be
-         different even if the index has not changed (ie: when making
-         significant changes to your config file)
+         etagSeed="..."，这个选项可以在索引没变的时候强制修改ETag。
 
-         (lastModifiedFrom and etagSeed are both ignored if you use
-         the never304="true" option)
+         (如果你设置了never304="true"，lastModifiedFrom和etagSeed都会被忽略掉。)
       -->
     <!--
        <httpCaching lastModifiedFrom="openTime"
@@ -649,33 +581,25 @@
       -->
   </requestDispatcher>
 
-  <!-- Request Handlers 
+  <!-- 请求处理器
 
        http://wiki.apache.org/solr/SolrRequestHandler
 
-       incoming queries will be dispatched to the correct handler
-       based on the path or the qt (query type) param.
+       输入的请求会被调度到path活qt参数指定的处理器来处理。
 
-       Names starting with a '/' are accessed with the a path equal to
-       the registered name.  Names without a leading '/' are accessed
-       with: http://host/app/[core/]select?qt=name
+       "/"开始的访问匹配"/"后面的名字对应的注册器名字。不以"/"开头的请求可以用这样的方式
+       访问：http://host/app/[core/]select?qt=name
 
-       If a /select request is processed with out a qt param
-       specified, the requestHandler that declares default="true" will
-       be used.
+       如果一个"/select"请求没有声明qt参数，则设置了default="true"的requestHandler会生效。
        
-       If a Request Handler is declared with startup="lazy", then it will
-       not be initialized until the first request that uses it.
-
+       如果一个请求处理器声明了startup="lazy"，那么在有请求使用它之前是不会初始化的。
     -->
   <!-- SearchHandler
 
        http://wiki.apache.org/solr/SearchHandler
 
-       For processing Search Queries, the primary Request Handler
-       provided with Solr is "SearchHandler" It delegates to a sequent
-       of SearchComponents (see below) and supports distributed
-       queries across multiple shards
+       为了处理搜索查询，Solr提供的优先的请求处理器是"SearchHandler"。它代表SearchComponents
+       结果并支持通过跨多碎片的方式实现分布式查询。
     -->
   <requestHandler name="search" class="solr.SearchHandler" default="true">
     <!-- default values for query parameters can be specified, these
