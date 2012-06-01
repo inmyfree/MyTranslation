@@ -605,43 +605,32 @@
     <!-- default values for query parameters can be specified, these
          will be overridden by parameters in the request
       -->
+    <!-- 这里可以设置各参数的默认值，这些默认值会被请求的参数覆盖掉。-->
      <lst name="defaults">
        <str name="echoParams">explicit</str>
        <int name="rows">10</int>
      </lst>
-    <!-- In addition to defaults, "appends" params can be specified
-         to identify values which should be appended to the list of
-         multi-val params from the query (or the existing "defaults").
-      -->
-    <!-- In this example, the param "fq=instock:true" would be appended to
-         any query time fq params the user may specify, as a mechanism for
-         partitioning the index, independent of any user selected filtering
-         that may also be desired (perhaps as a result of faceted searching).
 
-         NOTE: there is *absolutely* nothing a client can do to prevent these
-         "appends" values from being used, so don't use this mechanism
-         unless you are sure you always want it.
+    <!-- 除默认值外，还可以用"appends"参数指明附加到查询参数列表的参数值（或者已存在的默认值）-->
+
+    <!-- 在这个例子中，参数"fq=instock:true"会加到每一次用户查询请求中，用来声明一个索引分区机制，
+         不受用户声明的过滤查询的影响（可能是faced搜索的一个结果）。
+
+         注意：用户端完全无法操作"appends"参数，所以用这东西之前你要确定你确实要用它。
       -->
     <!--
        <lst name="appends">
          <str name="fq">inStock:true</str>
        </lst>
       -->
-    <!-- "invariants" are a way of letting the Solr maintainer lock down
-         the options available to Solr clients.  Any params values
-         specified here are used regardless of what values may be specified
-         in either the query, the "defaults", or the "appends" params.
+    <!-- "invariants"可以使Solr维护者锁定Solr用户端可以使用的选项。这里声明的参数对用户端来说无论是
+         设置默认值还是设置"appends"都无法生效。
 
-         In this example, the facet.field and facet.query params would
-         be fixed, limiting the facets clients can use.  Faceting is
-         not turned on by default - but if the client does specify
-         facet=true in the request, these are the only facets they
-         will be able to see counts for; regardless of what other
-         facet.field or facet.query params they may specify.
+         在这个例子中，facet.field和facet.query都被锁定了，用户端将无法修改他们。Faceting并不是默认开启
+         的 - 但是只要用户端在请求中设置了facet=true，用户端就只能用这里声明的这些facets。用户端声明的
+         其他facet.field和facet.query都是无法生效的。
 
-         NOTE: there is *absolutely* nothing a client can do to prevent these
-         "invariants" values from being used, so don't use this mechanism
-         unless you are sure you always want it.
+         注意：用户端完全无法操作"invariants"参数，所以用这东西之前你要确定你确实要用它。
       -->
     <!--
        <lst name="invariants">
@@ -651,9 +640,8 @@
          <str name="facet.query">price:[500 TO *]</str>
        </lst>
       -->
-    <!-- If the default list of SearchComponents is not desired, that
-         list can either be overridden completely, or components can be
-         prepended or appended to the default list.  (see below)
+    <!-- 如果没有设置SearchComponents的默认值列表，那么这个列表完全可以被覆盖掉，或者可以在默认列表之前/之后
+         添加组件（看下面）
       -->
     <!--
        <arr name="components">
@@ -663,7 +651,7 @@
       -->
     </requestHandler>
 
-  <!-- A request handler that returns indented JSON by default -->
+  <!-- 默认返回自动缩进JSON格式的请求处理器 -->
   <requestHandler name="/query" class="solr.SearchHandler">
      <lst name="defaults">
        <str name="echoParams">explicit</str>
@@ -673,9 +661,9 @@
   </requestHandler>
 
 
-  <!-- realtime get handler, guaranteed to return the latest stored fields of
-       any document, without the need to commit or open a new searcher.  The
-       current implementation relies on the updateLog feature being enabled. -->
+  <!-- 实时查询处理器，不用开新的搜索器活提交就可以获得文档里最新的字段值。当前的实现方式是依赖
+       于更新日志特性，所以更新日志功能得开启。
+     -->
   <requestHandler name="/get" class="solr.RealTimeGetHandler">
      <lst name="defaults">
        <str name="omitHeader">true</str>
@@ -683,26 +671,23 @@
   </requestHandler>
 
  
-  <!-- A Robust Example 
-       
-       This example SearchHandler declaration shows off usage of the
-       SearchHandler with many defaults declared
+  <!-- 一个健壮的例子
 
-       Note that multiple instances of the same Request Handler
-       (SearchHandler) can be registered multiple times with different
-       names (and different init parameters)
+       这个示例SearchHandler声明秀一下关闭很多默认值的用处。
+
+       注意一个请求处理器（SearchHandler）的多个实例可以被用不同名字注册多次（而且有不同的初始化参数）。
     -->
   <requestHandler name="/browse" class="solr.SearchHandler">
      <lst name="defaults">
        <str name="echoParams">explicit</str>
 
-       <!-- VelocityResponseWriter settings -->
+       <!-- VelocityResponseWriter设置 -->
        <str name="wt">velocity</str>
        <str name="v.template">browse</str>
        <str name="v.layout">layout</str>
        <str name="title">Solritas</str>
 
-       <!-- Query settings -->
+       <!-- 查询设置 -->
        <str name="defType">edismax</str>
        <str name="qf">
           text^0.5 features^1.0 name^1.2 sku^1.5 id^10.0 manu^1.1 cat^1.4
@@ -718,7 +703,7 @@
        <str name="mlt.fl">text,features,name,sku,id,manu,cat</str>
        <int name="mlt.count">3</int>
 
-       <!-- Faceting defaults -->
+       <!-- Facet默认值 -->
        <str name="facet">on</str>
        <str name="facet.field">cat</str>
        <str name="facet.field">manu_exact</str>
@@ -742,13 +727,13 @@
        <str name="f.manufacturedate_dt.facet.range.other">before</str>
        <str name="f.manufacturedate_dt.facet.range.other">after</str>
 
-       <!-- Highlighting defaults -->
+       <!-- 高亮设置默认值 -->
        <str name="hl">on</str>
        <str name="hl.fl">text features name</str>
        <str name="f.name.hl.fragsize">0</str>
        <str name="f.name.hl.alternateField">name</str>
 
-       <!-- Spell checking defaults -->
+       <!-- 拼写检查默认值 -->
        <str name="spellcheck">on</str>
        <str name="spellcheck.collate">true</str>
        <str name="spellcheck.onlyMorePopular">false</str>
@@ -756,35 +741,29 @@
        <str name="spellcheck.count">3</str>
      </lst>
 
-     <!-- append spellchecking to our list of components -->
+     <!-- 添加拼写检查到我们的组件列表中 -->
      <arr name="last-components">
        <str>spellcheck</str>
      </arr>
   </requestHandler>
 
 
-  <!-- Update Request Handler.  
+  <!-- 更新请求处理器
        
        http://wiki.apache.org/solr/UpdateXmlMessages
 
-       The canonical Request Handler for Modifying the Index through
-       commands specified using XML, JSON, CSV, or JAVABIN
+       通过XML,JSON,CSV,JAVABIN声明的命理来修改索引的权威的请求处理器。
 
-       Note: Since solr1.1 requestHandlers requires a valid content
-       type header if posted in the body. For example, curl now
-       requires: -H 'Content-type:text/xml; charset=utf-8'
+       注意：从来solr 1.1开始，请求处理器如果内容通过body来post，就需要一个特定的头信息。
+       例如：curl现在要请求：-H 'Content-type:text/xml; charset=utf-8'
        
-       To override the request content type and force a specific 
-       Content-type, use the request parameter: 
-         ?update.contentType=text/csv
-       
-       This handler will pick a response format to match the input
-       if the 'wt' parameter is not explicit
+       为了重载请求内容类型并强制设置一个Content-type,请求参数如：
+       ?update.contentType=text/csv
+
+       这个处理器会根据'wt'参数的设定格式来获取响应数据。
     -->
   <requestHandler name="/update" class="solr.UpdateRequestHandler">
-    <!-- See below for information on defining 
-         updateRequestProcessorChains that can be used by name 
-         on each Update Request
+    <!-- 下面的信息定义了updateRequestProcessorChains,它将确定可以在更新请求中使用的名字。
       -->
     <!--
        <lst name="defaults">
@@ -794,7 +773,7 @@
   </requestHandler>
   
 
-  <!-- Solr Cell Update Request Handler
+  <!-- Solr细胞更细处理器
 
        http://wiki.apache.org/solr/ExtractingRequestHandler 
 
@@ -803,13 +782,13 @@
                   startup="lazy"
                   class="solr.extraction.ExtractingRequestHandler" >
     <lst name="defaults">
-      <!-- All the main content goes into "text"... if you need to return
-           the extracted text or do highlighting, use a stored field. -->
+      <!-- 所有主要内容都放到"text"...如果你需要返回萃取过的文本内容或做高亮处理，
+           使用字段。-->
       <str name="fmap.content">text</str>
       <str name="lowernames">true</str>
       <str name="uprefix">ignored_</str>
 
-      <!-- capture link hrefs but ignore div attributes -->
+      <!-- 捕获链接的href属性，但是忽略div属性。 -->
       <str name="captureAttr">true</str>
       <str name="fmap.a">links</str>
       <str name="fmap.div">ignored_</str>
@@ -817,36 +796,33 @@
   </requestHandler>
 
 
-  <!-- Field Analysis Request Handler
+  <!-- 字段分析请求处理器
 
-       RequestHandler that provides much the same functionality as
-       analysis.jsp. Provides the ability to specify multiple field
-       types and field names in the same request and outputs
-       index-time and query-time analysis for each of them.
+       请求处理器提供了很多和analysis.jsp相同的功能。提供了在索引时和查询时对同一请求的
+       多个字段类型和字段名字进行分析的能力。
 
-       Request parameters are:
-       analysis.fieldname - field name whose analyzers are to be used
+       请求参数是：
+       analysis.fieldname - 分析器要用的字段名。
 
-       analysis.fieldtype - field type whose analyzers are to be used
-       analysis.fieldvalue - text for index-time analysis
-       q (or analysis.q) - text for query time analysis
-       analysis.showmatch (true|false) - When set to true and when
-           query analysis is performed, the produced tokens of the
-           field value analysis will be marked as "matched" for every
-           token that is produces by the query analysis
+       analysis.fieldtype - 分析器要处理的字段类型。
+
+       analysis.fieldvalue - 索引时要分析的文本。
+
+       q (or analysis.q) - 查询时要分析的文本。
+
+       analysis.showmatch (true|false) - 当设置为true并且查询分析器启动了，查询分析生成的这些
+                                         字段值分析token会被标记为"matched"。
    -->
   <requestHandler name="/analysis/field" 
                   startup="lazy"
                   class="solr.FieldAnalysisRequestHandler" />
 
 
-  <!-- Document Analysis Handler
+  <!-- 文档分析器
 
        http://wiki.apache.org/solr/AnalysisRequestHandler
 
-       An analysis handler that provides a breakdown of the analysis
-       process of provided documents. This handler expects a (single)
-       content stream with the following format:
+       可以对给定文档进行分析处理的分析器。数据格式如下：
 
        <docs>
          <doc>
@@ -859,29 +835,22 @@
          ...
        </docs>
 
-    Note: Each document must contain a field which serves as the
-    unique key. This key is used in the returned response to associate
-    an analysis breakdown to the analyzed document.
+    注意：每个文档必须包含一个unique字段。这个字段用来将返回的响应文档和文档分析器关联起来。
 
-    Like the FieldAnalysisRequestHandler, this handler also supports
-    query analysis by sending either an "analysis.query" or "q"
-    request parameter that holds the query text to be analyzed. It
-    also supports the "analysis.showmatch" parameter which when set to
-    true, all field tokens that match the query tokens will be marked
-    as a "match". 
+    与字段分析器类似，这个处理器也需要在查询请求中通过"analysis.query"或"q"来传递要分析的文本内容。
+    也支持"analysis.showmatch"参数（需要设置为true），所有符合匹配查询token的字段token都会标记为"match"。
   -->
   <requestHandler name="/analysis/document" 
                   class="solr.DocumentAnalysisRequestHandler" 
                   startup="lazy" />
 
-  <!-- Admin Handlers
+  <!-- 管理器
 
-       Admin Handlers - This will register all the standard admin
-       RequestHandlers.  
+       管理器 - 注册所有的标准的用于管理的处理器。
     -->
   <requestHandler name="/admin/" 
                   class="solr.admin.AdminHandlers" />
-  <!-- This single handler is equivalent to the following... -->
+  <!-- 这个单个处理器等价于下面那一堆... -->
   <!--
      <requestHandler name="/admin/luke"       class="solr.admin.LukeRequestHandler" />
      <requestHandler name="/admin/system"     class="solr.admin.SystemInfoHandler" />
@@ -890,9 +859,8 @@
      <requestHandler name="/admin/properties" class="solr.admin.PropertiesRequestHandler" />
      <requestHandler name="/admin/file"       class="solr.admin.ShowFileRequestHandler" >
     -->
-  <!-- If you wish to hide files under ${solr.home}/conf, explicitly
-       register the ShowFileRequestHandler using: 
-    -->
+
+  <!-- 如果你希望隐藏${solr.home}/conf下面的文件，显示注册ShowFileRequestHandler: -->
   <!--
      <requestHandler name="/admin/file" 
                      class="solr.admin.ShowFileRequestHandler" >
@@ -911,15 +879,13 @@
     <lst name="defaults">
       <str name="echoParams">all</str>
     </lst>
-    <!-- An optional feature of the PingRequestHandler is to configure the 
-         handler with a "healthcheckFile" which can be used to enable/disable 
-         the PingRequestHandler.
-         relative paths are resolved against the data dir 
-      -->
+
+    <!-- PingRequestHandler的一个可选特性是通过给处理器配置"healthcheckFile"来启用/禁用PingRequestHandler。
+         相关路径在data目录下。 -->
     <!-- <str name="healthcheckFile">server-enabled.txt</str> -->
   </requestHandler>
 
-  <!-- Echo the request contents back to the client -->
+  <!-- 回显请求内容给客户端 -->
   <requestHandler name="/debug/dump" class="solr.DumpRequestHandler" >
     <lst name="defaults">
      <str name="echoParams">explicit</str> 
@@ -929,14 +895,11 @@
   
   <!-- Solr Replication
 
-       The SolrReplicationHandler supports replicating indexes from a
-       "master" used for indexing and "slaves" used for queries.
+       SolrReplicationHandler支持通过查询来对索引进行主从同步。
 
        http://wiki.apache.org/solr/SolrReplication 
 
-       In the example below, remove the <lst name="master"> section if
-       this is just a slave and remove  the <lst name="slave"> section
-       if this is just a master.
+       下面的例子中，如果是在slave就移除<lst name="master">,如果是slave就移除<lst name="slave">。
     -->
   <!--
      <requestHandler name="/replication" class="solr.ReplicationHandler" >
@@ -952,19 +915,18 @@
      </requestHandler>
     -->
     
-    <!-- Solr Replication for SolrCloud Recovery
+    <!-- Solr Replication用于SolrCloud的恢复
     
-         This is the config need for SolrCloud's recovery replication.
+         这是SolrCloud的恢复需要的配置。
     -->
 	<requestHandler name="/replication" class="solr.ReplicationHandler" startup="lazy" /> 
 
 
-  <!-- Search Components
+  <!-- 搜索组件
 
-       Search components are registered to SolrCore and used by 
-       instances of SearchHandler (which can access them by name)
+       注册了的搜索组件会被搜索处理器实例调用（可以通过名字来访问）
        
-       By default, the following components are available:
+       默认情况下，下面组件是有效的：
        
        <searchComponent name="query"     class="solr.QueryComponent" />
        <searchComponent name="facet"     class="solr.FacetComponent" />
@@ -973,7 +935,7 @@
        <searchComponent name="stats"     class="solr.StatsComponent" />
        <searchComponent name="debug"     class="solr.DebugComponent" />
    
-       Default configuration in a requestHandler would look like:
+       一个处理器的默认配置是像下面这样的：
 
        <arr name="components">
          <str>query</str>
@@ -984,10 +946,9 @@
          <str>debug</str>
        </arr>
 
-       If you register a searchComponent to one of the standard names, 
-       that will be used instead of the default.
+       如果你使用标准名字注册一个搜索组件，默认的将被覆盖掉。
 
-       To insert components before or after the 'standard' components, use:
+       要在标准组件之前或之后加入组件，要这么搞：
     
        <arr name="first-components">
          <str>myFirstComponentName</str>
@@ -997,15 +958,12 @@
          <str>myLastComponentName</str>
        </arr>
 
-       NOTE: The component registered with the name "debug" will
-       always be executed after the "last-components" 
-       
+       注意："debug"组件总是在最后。
      -->
   
-   <!-- Spell Check
+   <!-- 拼写检查
 
-        The spell check component can return a list of alternative spelling
-        suggestions.  
+        拼写检查组件会返回一些可选的拼写建议。
 
         http://wiki.apache.org/solr/SpellCheckComponent
      -->
@@ -1013,35 +971,33 @@
 
     <str name="queryAnalyzerFieldType">textSpell</str>
 
-    <!-- Multiple "Spell Checkers" can be declared and used by this
-         component
-      -->
+    <!-- 这个组件会用到很多拼写检查器。 -->
 
-    <!-- a spellchecker built from a field of the main index -->
+    <!-- 一个为主索引的某字段建立的拼写检查器 -->
     <lst name="spellchecker">
       <str name="name">default</str>
       <str name="field">name</str>
       <str name="classname">solr.DirectSolrSpellChecker</str>
-      <!-- the spellcheck distance measure used, the default is the internal levenshtein -->
+      <!-- 拼写检查测量距离可用，默认是内部的莱文斯坦实现。 -->
       <str name="distanceMeasure">internal</str>
-      <!-- minimum accuracy needed to be considered a valid spellcheck suggestion -->
+      <!-- 最小准确率需要和正确拼写建议有关 -->
       <float name="accuracy">0.5</float>
-      <!-- the maximum #edits we consider when enumerating terms: can be 1 or 2 -->
+      <!-- 最大编辑值的可能值是枚举型的：1,2 -->
       <int name="maxEdits">2</int>
-      <!-- the minimum shared prefix when enumerating terms -->
+      <!-- 枚举属于时最小共享前缀 -->
       <int name="minPrefix">1</int>
-      <!-- maximum number of inspections per result. -->
+      <!-- 每次结果检查的最大次数 -->
       <int name="maxInspections">5</int>
-      <!-- minimum length of a query term to be considered for correction -->
+      <!-- 一个查询中准确部分的最小长度 -->
       <int name="minQueryLength">4</int>
-      <!-- maximum threshold of documents a query term can appear to be considered for correction -->
+      <!-- 一个获得准确查询的最大入口数 -->
       <float name="maxQueryFrequency">0.01</float>
-      <!-- uncomment this to require suggestions to occur in 1% of the documents
+      <!-- 去掉这个注视可以在0.1%的文档中提供拼写建议
       	<float name="thresholdTokenFrequency">.01</float>
       -->
     </lst>
 
-    <!-- a spellchecker that uses a different distance measure -->
+    <!-- 拼写检查器用在不同的相似度衡量的情况下 -->
     <!--
        <lst name="spellchecker">
          <str name="name">jarowinkler</str>
@@ -1053,12 +1009,12 @@
        </lst>
      -->
 
-    <!-- a spellchecker that use an alternate comparator 
+    <!-- 使用不同比较器的拼写检查器
 
-         comparatorClass be one of:
-          1. score (default)
-          2. freq (Frequency first, then score)
-          3. A fully qualified class name
+         比较器类可选值：
+          1. score (默认)
+          2. freq (频率优先，分数其次)
+          3. 一个完整的类名
       -->
     <!--
        <lst name="spellchecker">
@@ -1068,7 +1024,7 @@
          <str name="comparatorClass">freq</str>
       -->
 
-    <!-- A spellchecker that reads the list of words from a file -->
+    <!-- 从文件中读取单词列表的拼写检查器 -->
     <!--
        <lst name="spellchecker">
          <str name="classname">solr.FileBasedSpellChecker</str>
@@ -1080,19 +1036,15 @@
       -->
   </searchComponent>
 
-  <!-- A request handler for demonstrating the spellcheck component.  
+  <!-- 一个包含拼写检查组件的请求处理器
 
-       NOTE: This is purely as an example.  The whole purpose of the
-       SpellCheckComponent is to hook it into the request handler that
-       handles your normal user queries so that a separate request is
-       not needed to get suggestions.
+       注意：这个是简单的例子。SpellCheckComponent组件的目的是作为够子挂到请求处理器当中去，确保
+       用户的查询请求不用一个一个的获得拼写建议。
 
-       IN OTHER WORDS, THERE IS REALLY GOOD CHANCE THE SETUP BELOW IS
-       NOT WHAT YOU WANT FOR YOUR PRODUCTION SYSTEM!
+       换句话说，下面这个配置不适合放到生产环境中去！！！
        
-       See http://wiki.apache.org/solr/SpellCheckComponent for details
-       on the request parameters.
-    -->
+       详见：http://wiki.apache.org/solr/SpellCheckComponent
+       -->
   <requestHandler name="/spell" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
       <str name="spellcheck.onlyMorePopular">false</str>
@@ -1104,18 +1056,17 @@
     </arr>
   </requestHandler>
 
-  <!-- Term Vector Component
+  <!-- 术语向量组件
 
        http://wiki.apache.org/solr/TermVectorComponent
     -->
   <searchComponent name="tvComponent" class="solr.TermVectorComponent"/>
 
-  <!-- A request handler for demonstrating the term vector component
+  <!-- 使用属于向量组件的处理器。
 
-       This is purely as an example.
+       这是个简单的例子。
 
-       In reality you will likely want to add the component to your 
-       already specified request handlers. 
+       实际情况中，你可能会把这组件加到你已有的请求处理器中。
     -->
   <requestHandler name="tvrh" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
@@ -1126,12 +1077,11 @@
     </arr>
   </requestHandler>
 
-  <!-- Clustering Component
+  <!-- 集群组件
 
        http://wiki.apache.org/solr/ClusteringComponent
 
-       You'll need to set the solr.cluster.enabled system property
-       when running solr to run with clustering enabled:
+       当你想要在solr上使用集群的话，你需要设置solr.cluster.enabled的系统属性
 
             java -Dsolr.clustering.enabled=true -jar start.jar
 
@@ -1139,51 +1089,44 @@
   <searchComponent name="clustering"
                    enable="${solr.clustering.enabled:false}"
                    class="solr.clustering.ClusteringComponent" >
-    <!-- Declare an engine -->
+    <!-- 声明一个引擎 -->
     <lst name="engine">
-      <!-- The name, only one can be named "default" -->
+      <!-- 名字，只能有一个叫"default" -->
       <str name="name">default</str>
 
-      <!-- Class name of Carrot2 clustering algorithm.
+      <!-- Carrot2集群算法的类名。
 
-           Currently available algorithms are:
+           当前可用算法如下：
            
            * org.carrot2.clustering.lingo.LingoClusteringAlgorithm
            * org.carrot2.clustering.stc.STCClusteringAlgorithm
            * org.carrot2.clustering.kmeans.BisectingKMeansClusteringAlgorithm
            
-           See http://project.carrot2.org/algorithms.html for the
-           algorithm's characteristics.
+           详见 http://project.carrot2.org/algorithms.html 的算法部分
         -->
       <str name="carrot.algorithm">org.carrot2.clustering.lingo.LingoClusteringAlgorithm</str>
 
-      <!-- Overriding values for Carrot2 default algorithm attributes.
+      <!-- 重载Carrot2默认算法的属性值。
 
-           For a description of all available attributes, see:
+           关于所有可用属性的描述，参见：
            http://download.carrot2.org/stable/manual/#chapter.components.
-           Use attribute key as name attribute of str elements
-           below. These can be further overridden for individual
-           requests by specifying attribute key as request parameter
-           name and attribute value as parameter value.
+           使用属性键作为下面字符串元素的属性名。这些可以通过请求参数来重载。
         -->
       <str name="LingoClusteringAlgorithm.desiredClusterCountBase">20</str>
 
-      <!-- Location of Carrot2 lexical resources.
+      <!-- Carrot2字典资源的位置
 
-           A directory from which to load Carrot2-specific stop words
-           and stop labels. Absolute or relative to Solr config directory.
-           If a specific resource (e.g. stopwords.en) is present in the
-           specified dir, it will completely override the corresponding
-           default one that ships with Carrot2.
+           Carrot2算法载入字典和标签的目录。Solr配置中的绝对或相对路径。如果声明了一个专门的资源（比如：stopwords.en）
+           则会完全覆盖掉默认的对应值。
 
-           For an overview of Carrot2 lexical resources, see:
+           要了解Carrot2字典资源，参见：
            http://download.carrot2.org/head/manual/#chapter.lexical-resources
         -->
       <str name="carrot.lexicalResourcesDir">clustering/carrot2</str>
 
-      <!-- The language to assume for the documents.
+      <!-- 文档数据使用的语言
 
-           For a list of allowed values, see:
+           下面是运行使用的语言的可能值列表：
            http://download.carrot2.org/stable/manual/#section.attribute.lingo.MultilingualClustering.defaultLanguage
        -->
       <str name="MultilingualClustering.defaultLanguage">ENGLISH</str>
@@ -1194,12 +1137,11 @@
     </lst>
   </searchComponent>
 
-  <!-- A request handler for demonstrating the clustering component
+  <!-- 使用集群组件的请求处理器
 
-       This is purely as an example.
+       这只是个简单的例子。
 
-       In reality you will likely want to add the component to your 
-       already specified request handlers. 
+       实际应用中你可能会把组件加到你已经在用的请求处理器。
     -->
   <requestHandler name="/clustering"
                   startup="lazy"
@@ -1209,16 +1151,17 @@
       <bool name="clustering">true</bool>
       <str name="clustering.engine">default</str>
       <bool name="clustering.results">true</bool>
-      <!-- The title field -->
+      <!-- 字段名 -->
       <str name="carrot.title">name</str>
       <str name="carrot.url">id</str>
-      <!-- The field to cluster on -->
+      <!-- 使用集群的字段 -->
        <str name="carrot.snippet">features</str>
-       <!-- produce summaries -->
+       <!-- 生成摘要 -->
        <bool name="carrot.produceSummary">true</bool>
-       <!-- the maximum number of labels per cluster -->
+       <!-- 每个集群的标签上限 -->
        <!--<int name="carrot.numDescriptions">5</int>-->
-       <!-- produce sub clusters -->
+
+       <!-- 生成子集群 -->
        <bool name="carrot.outputSubClusters">false</bool>
        
        <str name="defType">edismax</str>
@@ -1234,16 +1177,15 @@
     </arr>
   </requestHandler>
   
-  <!-- Terms Component
+  <!-- 术语组件
 
        http://wiki.apache.org/solr/TermsComponent
 
-       A component to return terms and document frequency of those
-       terms
+       获得文档使用各术语的频率。
     -->
   <searchComponent name="terms" class="solr.TermsComponent"/>
 
-  <!-- A request handler for demonstrating the terms component -->
+  <!-- 使用术语组件的请求处理器 -->
   <requestHandler name="/terms" class="solr.SearchHandler" startup="lazy">
      <lst name="defaults">
       <bool name="terms">true</bool>
@@ -1254,21 +1196,19 @@
   </requestHandler>
 
 
-  <!-- Query Elevation Component
+  <!-- 查询前置组件
 
        http://wiki.apache.org/solr/QueryElevationComponent
 
-       a search component that enables you to configure the top
-       results for a given query regardless of the normal lucene
-       scoring.
+       这个组件可以让你通过配置把分数不高的搜速结果放到结果集的前排位置。
     -->
   <searchComponent name="elevator" class="solr.QueryElevationComponent" >
-    <!-- pick a fieldType to analyze queries -->
+    <!-- 取得用于分析查询的字段类型 -->
     <str name="queryFieldType">string</str>
     <str name="config-file">elevate.xml</str>
   </searchComponent>
 
-  <!-- A request handler for demonstrating the elevator component -->
+  <!-- 使用前置组件的请求处理器 -->
   <requestHandler name="/elevate" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
       <str name="echoParams">explicit</str>
@@ -1278,14 +1218,14 @@
     </arr>
   </requestHandler>
 
-  <!-- Highlighting Component
+  <!-- 高亮组件
 
        http://wiki.apache.org/solr/HighlightingParameters
     -->
   <searchComponent class="solr.HighlightComponent" name="highlight">
     <highlighting>
-      <!-- Configure the standard fragmenter -->
-      <!-- This could most likely be commented out in the "default" case -->
+      <!-- 配置标准片段 -->
+      <!-- 这部分通常情况下是被注释掉的。 -->
       <fragmenter name="gap" 
                   default="true"
                   class="solr.highlight.GapFragmenter">
@@ -1294,22 +1234,20 @@
         </lst>
       </fragmenter>
 
-      <!-- A regular-expression-based fragmenter 
-           (for sentence extraction) 
-        -->
+      <!-- 基于正则的片段匹配（为了提取句子） -->
       <fragmenter name="regex" 
                   class="solr.highlight.RegexFragmenter">
         <lst name="defaults">
-          <!-- slightly smaller fragsizes work better because of slop -->
+          <!-- 稍微小点的片段大小会比较好，因为冗余的考虑。 -->
           <int name="hl.fragsize">70</int>
-          <!-- allow 50% slop on fragment sizes -->
+          <!-- 每个匹配片段允许50%的冗余 -->
           <float name="hl.regex.slop">0.5</float>
-          <!-- a basic sentence pattern -->
+          <!-- 一个基本的句子表达式 -->
           <str name="hl.regex.pattern">[-\w ,/\n\&quot;&apos;]{20,200}</str>
         </lst>
       </fragmenter>
 
-      <!-- Configure the standard formatter -->
+      <!-- 配置标准格式器 -->
       <formatter name="html" 
                  default="true"
                  class="solr.highlight.HtmlFormatter">
@@ -1319,20 +1257,20 @@
         </lst>
       </formatter>
 
-      <!-- Configure the standard encoder -->
+      <!-- 配置标准编码器 -->
       <encoder name="html" 
                class="solr.highlight.HtmlEncoder" />
 
-      <!-- Configure the standard fragListBuilder -->
+      <!-- 配置标准fragListBuilder -->
       <fragListBuilder name="simple" 
                        default="true"
                        class="solr.highlight.SimpleFragListBuilder"/>
 
-      <!-- Configure the single fragListBuilder -->
+      <!-- 配置单个fragListBuilder -->
       <fragListBuilder name="single" 
                        class="solr.highlight.SingleFragListBuilder"/>
 
-      <!-- default tag FragmentsBuilder -->
+      <!-- 默认的FragmentsBuilder -->
       <fragmentsBuilder name="default" 
                         default="true"
                         class="solr.highlight.ScoreOrderFragmentsBuilder">
@@ -1343,7 +1281,7 @@
         -->
       </fragmentsBuilder>
 
-      <!-- multi-colored tag FragmentsBuilder -->
+      <!-- 彩色FragmentsBuilder -->
       <fragmentsBuilder name="colored" 
                         class="solr.highlight.ScoreOrderFragmentsBuilder">
         <lst name="defaults">
@@ -1369,10 +1307,10 @@
       <boundaryScanner name="breakIterator" 
                        class="solr.highlight.BreakIteratorBoundaryScanner">
         <lst name="defaults">
-          <!-- type should be one of CHARACTER, WORD(default), LINE and SENTENCE -->
+          <!-- 类型可能值：CHARACTER,WORD(默认),LINE,SENTENCE -->
           <str name="hl.bs.type">WORD</str>
-          <!-- language and country are used when constructing Locale object.  -->
-          <!-- And the Locale object will be used when getting instance of BreakIterator -->
+          <!-- 本地化的时候需要配置国家和语言 -->
+          <!-- 在获得BreakIterator实例时会进行本地化 -->
           <str name="hl.bs.language">en</str>
           <str name="hl.bs.country">US</str>
         </lst>
@@ -1380,23 +1318,17 @@
     </highlighting>
   </searchComponent>
 
-  <!-- Update Processors
+  <!-- 更新处理器
 
-       Chains of Update Processor Factories for dealing with Update
-       Requests can be declared, and then used by name in Update
-       Request Processors
+       关于处理更新请求的更新处理器的相关约束参见：
 
        http://wiki.apache.org/solr/UpdateRequestProcessor
 
     --> 
-  <!-- Deduplication
+  <!-- 拆分
 
-       An example dedup update processor that creates the "id" field
-       on the fly based on the hash code of some other fields.  This
-       example has overwriteDupes set to false since we are using the
-       id field as the signatureField and Solr will maintain
-       uniqueness based on that anyway.  
-       
+       下面是一个创建了"id"字段的例子，"id"字段由其他字段的哈希码生成。这个例子中，在我们使用了"id"字段
+       作为签名字段后进行了二次拆分，solr会维护它的唯一性。
     -->
   <!--
      <updateRequestProcessorChain name="dedupe">
@@ -1412,15 +1344,13 @@
      </updateRequestProcessorChain>
     -->
   
-  <!-- Language identification
+  <!-- 语言定义
 
-       This example update chain identifies the language of the incoming
-       documents using the langid contrib. The detected language is
-       written to field language_s. No field name mapping is done.
-       The fields used for detection are text, title, subject and description,
-       making this example suitable for detecting languages form full-text
-       rich documents injected via ExtractingRequestHandler.
-       See more about langId at http://wiki.apache.org/solr/LanguageDetection
+       这个例子更新了根据语言ID属性传进来的文档的定义约束。检测到的语言会写道language_s字段。没有建立名字映射。
+       语言检测的字段包括：text,title,subject和description。这个例子很好的展示了通过ExtractingRequestHandler
+       进行语言检测后构造富文本全文搜索。
+
+       更多语言相关信息参考：http://wiki.apache.org/solr/LanguageDetection
     -->
     <!--
      <updateRequestProcessorChain name="langid">
@@ -1434,20 +1364,17 @@
      </updateRequestProcessorChain>
     -->
  
-  <!-- Response Writers
+  <!-- 响应写入器
 
        http://wiki.apache.org/solr/QueryResponseWriter
 
-       Request responses will be written using the writer specified by
-       the 'wt' request parameter matching the name of a registered
-       writer.
+       请求的响应需要由"wt"参数指定的写入器来进行响应操作。
 
-       The "default" writer is the default and will be used if 'wt' is
-       not specified in the request.
+       如果请求里没声明"wt"参数，则默认写入器是"default"。
     -->
-  <!-- The following response writers are implicitly configured unless
-       overridden...
-    -->
+
+  <!-- 以下响应写入器在被覆盖之前是有效的...  -->
+
   <!--
      <queryResponseWriter name="xml" 
                           default="true"
@@ -1461,80 +1388,73 @@
     -->
 
   <queryResponseWriter name="json" class="solr.JSONResponseWriter">
-     <!-- For the purposes of the tutorial, JSON responses are written as
-      plain text so that they are easy to read in *any* browser.
-      If you expect a MIME type of "application/json" just remove this override.
+     <!-- 为配合这个教程，JSON响应器以文本方式响应这样就可以跨浏览器了...
+          如果你希望使用"application/json"的MIME类型，那把这里的部分删掉就行了。
      -->
     <str name="content-type">text/plain; charset=UTF-8</str>
   </queryResponseWriter>
   
   <!--
-     Custom response writers can be declared as needed...
+     根据需要设置响应写入器
     -->
     <queryResponseWriter name="velocity" class="solr.VelocityResponseWriter" startup="lazy"/>
   
 
-  <!-- XSLT response writer transforms the XML output by any xslt file found
-       in Solr's conf/xslt directory.  Changes to xslt files are checked for
-       every xsltCacheLifetimeSeconds.  
+  <!-- XSLT响应器会把XML根据Solr的conf/xslt目录下的xslt进行输出。xslt文件的切换频率要看xsltCacheLifetimeSeconds。
     -->
   <queryResponseWriter name="xslt" class="solr.XSLTResponseWriter">
     <int name="xsltCacheLifetimeSeconds">5</int>
   </queryResponseWriter>
 
-  <!-- Query Parsers
+  <!-- 查询解析器
 
        http://wiki.apache.org/solr/SolrQuerySyntax
 
-       Multiple QParserPlugins can be registered by name, and then
-       used in either the "defType" param for the QueryComponent (used
-       by SearchHandler) or in LocalParams
+       可以通过名字注册多个QParserPlugins，并且可以通过QueryComponent或LocalParams的"defType"参数来调用。
     -->
-  <!-- example of registering a query parser -->
+  <!-- 注册查询解析器的例子 -->
   <!--
      <queryParser name="myparser" class="com.mycompany.MyQParserPlugin"/>
     -->
 
-  <!-- Function Parsers
+  <!-- 函数解析器
 
        http://wiki.apache.org/solr/FunctionQuery
 
-       Multiple ValueSourceParsers can be registered by name, and then
-       used as function names when using the "func" QParser.
+       可以通过名字注册多个ValueSourceParsers,然后通过给"func"赋函数名来使用。
     -->
-  <!-- example of registering a custom function parser  -->
+  <!-- 注册自定义函数解析器的例子 -->
   <!--
      <valueSourceParser name="myfunc" 
                         class="com.mycompany.MyValueSourceParser" />
     -->
     
   
-  <!-- Document Transformers
+  <!-- 文档转换器
        http://wiki.apache.org/solr/DocTransformers
     -->
   <!--
-     Could be something like:
+     类似这个样子:
      <transformer name="db" class="com.mycompany.LoadFromDatabaseTransformer" >
        <int name="connection">jdbc://....</int>
      </transformer>
      
-     To add a constant value to all docs, use:
+     为所有文档声明一个常量:
      <transformer name="mytrans2" class="org.apache.solr.response.transform.ValueAugmenterFactory" >
        <int name="value">5</int>
      </transformer>
      
-     If you want the user to still be able to change it with _value:something_ use this:
+     如果希望用可以通过 _value:something_ 的方式修改它的话，你可以这么搞：
      <transformer name="mytrans3" class="org.apache.solr.response.transform.ValueAugmenterFactory" >
        <double name="defaultValue">5</double>
      </transformer>
 
-      If you are using the QueryElevationComponent, you may wish to mark documents that get boosted.  The
-      EditorialMarkerFactory will do exactly that:
+     如果你使用QueryElevationComponent，你可能希望标记高频率文档。EditorialMarkerFactory可以很好的做到：
      <transformer name="qecBooster" class="org.apache.solr.response.transform.EditorialMarkerFactory" />
     -->
     
 
-  <!-- Legacy config for the admin interface -->
+  <!-- 最后是管理接口的配置 -->
   <admin>
     <defaultQuery>*:*</defaultQuery>
   </admin>
