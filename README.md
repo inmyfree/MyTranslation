@@ -10,4 +10,3 @@ MyTranslation
 ----------
 * origin：原文
 * translation：译文
-* act_cute：译文[卖萌版]
